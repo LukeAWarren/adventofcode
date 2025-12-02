@@ -1,0 +1,57 @@
+import numpy as np
+from funcy import print_durations
+
+
+def read_bingo(file):
+    draws = np.loadtxt(file, max_rows=1, delimiter=",", dtype=int)
+    boards = np.loadtxt(file, skiprows=1, dtype=int)
+    return draws, boards.reshape((-1, 5, 5))
+
+
+def eval_bingo(draws, boards):
+
+    matches = np.zeros_like(boards, dtype=bool)
+    has_won = np.zeros(boards.shape[0], dtype=bool)
+
+    for draw in draws:
+        matches[boards == draw] = True
+
+        has_match_a1 = matches.all(axis=1).any(axis=1)
+        has_match_a2 = matches.all(axis=2).any(axis=1)
+
+        has_match = has_match_a1 | has_match_a2
+
+        new_winner = has_match & ~has_won
+
+        if new_winner.any():
+            winning_board_id = new_winner.argmax()
+            winning_board = boards[winning_board_id]
+            winning_matches = matches[winning_board_id]
+            yield winning_board[~winning_matches].sum() * draw
+
+        has_won = has_match
+
+
+@print_durations
+def day4(file):
+    draws, boards = read_bingo(file)
+    bingo_winner_generator = eval_bingo(draws, boards)
+    first = next(bingo_winner_generator)
+    for last in bingo_winner_generator:
+        pass
+    return first, last
+
+
+if __name__ == "__main__":
+
+    day4a_test, day4b_test = day4("bingo_example.dat")
+    day4a_puzzle, day4b_puzzle = day4("bingo.dat")
+
+    print(f"Day 4a: {day4a_puzzle}")
+    print(f"Day 4b: {day4b_puzzle}")
+
+    # assert day4a_test == 4512
+    # assert day4b_test == 1924
+
+    # assert day4a_puzzle == 89001
+    # assert day4b_puzzle == 7296

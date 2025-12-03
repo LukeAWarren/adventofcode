@@ -30,11 +30,56 @@ def max_subsequence(s: str, k: int) -> str:
     # If we didn't drop enough characters, trim from the end.
     return "".join(stack[:k])
 
+def corey_lambs_get_largest_num(number: str, digit_count: int) -> str:
+    # Base cases
+    if len(number) == 0 or digit_count <= 0:
+        return ""
+    if len(number) == digit_count:
+        return number
+
+    # We can only pick the first digit from this window:
+    # number[0 : len(number) - (digit_count - 1)]
+    search_limit = len(number) - (digit_count - 1)
+    window = number[:search_limit]
+
+    # Find max digit and its index in the window
+    max_digit = '-1'
+    max_index = -1
+    for i, ch in enumerate(window):
+        if ch > max_digit:
+            max_digit = ch
+            max_index = i
+
+    # Select max_digit, then recurse on the remainder
+    return max_digit + corey_lambs_get_largest_num(number[max_index + 1:], digit_count - 1)
+
+# another from ChatGPT
+def max_subsequence_dp(s: str, k: int) -> str:
+    n = len(s)
+    dp = [[""] * (k + 1) for _ in range(n + 1)]
+
+    for i in range(n - 1, -1, -1):
+        for j in range(1, k + 1):
+            # Option 1: skip s[i]
+            best = dp[i + 1][j]
+
+            # Option 2: take s[i] if enough digits remain
+            if n - i >= j:
+                candidate = s[i] + dp[i + 1][j - 1]
+                if candidate > best:
+                    best = candidate
+
+            dp[i][j] = best
+
+    return dp[0][k]
+
 
 sum_of_joltage = 0
 
 for battery_bank in battery_banks:
-    max_joltage = max_subsequence(battery_bank.rstrip(), 12)
+    #max_joltage = max_subsequence(battery_bank.rstrip(), 12)
+    max_joltage = corey_lambs_get_largest_num(battery_bank.rstrip(), 12)
+    # max_joltage = max_subsequence_dp(battery_bank.rstrip(), 12)
     sum_of_joltage = sum_of_joltage + int(max_joltage)
 
 print(f'sum_of_joltage = {sum_of_joltage}')
